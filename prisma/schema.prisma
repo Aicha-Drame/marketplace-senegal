@@ -1,16 +1,52 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "./node_modules/@prisma/client"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum Role {
+  ACHETEUR
+  VENDEUR
+  ADMIN
+}
+
+enum CommandeStatus {
+  EN_ATTENTE
+  PAYEE
+  EXPEDIEE
+  LIVREE
+  ANNULEE
+}
+
+model Utilisateur {
+  id         Int       @id @default(autoincrement())
+  nom        String
+  email      String    @unique
+  motdepasse String
+  role       Role      @default(ACHETEUR)
+
+  // relations
+  boutique   Boutique?
+  commandes  Commande[]
+
+  createdAt  DateTime  @default(now())
+}
+
+model Boutique {
+  id          Int         @id @default(autoincrement())
+  nom         String
+  description String?
+
+  vendeurId   Int         @unique
+  vendeur     Utilisateur @relation(fields: [vendeurId], references: [id], onDelete: Cascade)
+
+  produits    Produit[]
+
+  createdAt   DateTime    @default(now())
 }
 
 model Produit {
@@ -20,22 +56,37 @@ model Produit {
   prix        Float
   image       String
   categorie   String
-  createdAt   DateTime @default(now())
-}
+  stock       Int      @default(0)
 
-model Utilisateur {
-  id          Int      @id @default(autoincrement())
-  nom         String
-  email       String   @unique
-  motdepasse  String
-  commandes   Commande[]
+  boutiqueId  Int
+  boutique    Boutique @relation(fields: [boutiqueId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  items       CommandeItem[]
 }
 
 model Commande {
-  id            Int        @id @default(autoincrement())
-  utilisateur   Utilisateur @relation(fields: [utilisateurId], references: [id])
+  id            Int           @id @default(autoincrement())
   utilisateurId Int
-  produits      Json
+  utilisateur   Utilisateur   @relation(fields: [utilisateurId], references: [id], onDelete: Cascade)
+
   total         Float
-  createdAt     DateTime   @default(now())
+  status        CommandeStatus @default(EN_ATTENTE)
+
+  items         CommandeItem[]
+
+  createdAt     DateTime      @default(now())
+}
+
+model CommandeItem {
+  id          Int      @id @default(autoincrement())
+  commandeId  Int
+  produitId   Int
+
+  quantite    Int
+  prixUnitaire Float
+
+  commande    Commande @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  produit     Produit  @relation(fields: [produitId], references: [id], onDelete: Restrict)
 }
