@@ -1,3 +1,19 @@
+<<<<<<< HEAD
+# Marketplace Sénégal – Backend
+
+## Tech stack
+
+- Node.js
+- Express
+- PostgreSQL
+- Prisma ORM
+
+## Setup backend
+
+```bash
+npm install
+```
+=======
 # 🛒 SenShop – Marketplace Alimentaire au Sénégal
 
 ## 📌 Présentation du projet
@@ -120,3 +136,4 @@ Les contributions sont les bienvenues :
 📧 Contact : à ajouter
 
 ✨ *SenShop – Digitaliser le commerce alimentaire local*
+>>>>>>> origin/main
