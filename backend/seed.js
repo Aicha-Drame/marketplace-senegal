@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Démarrage du seed...");
 
-  // 1️⃣ Créer (ou récupérer) un vendeur via email (email est unique)
+  // Créer (ou récupérer) un vendeur via email (email est unique)
   const vendeur = await prisma.utilisateur.upsert({
     where: { email: "vendeur@test.com" },
     update: {
@@ -19,7 +19,7 @@ async function main() {
     },
   });
 
-  // 2️⃣ Créer (ou récupérer) une boutique
+  //  Créer (ou récupérer) une boutique
   // Dans ton schema, vendeurId est unique -> parfait pour upsert
   const boutique = await prisma.boutique.upsert({
     where: { vendeurId: vendeur.id },
@@ -34,7 +34,7 @@ async function main() {
     },
   });
 
-  // 3️⃣ Produits (safe sans upsert, car titre n'est pas unique)
+  //  Produits (safe sans upsert, car titre n'est pas unique)
   const produits = [
     {
       titre: "Miel pur",
@@ -81,7 +81,7 @@ async function main() {
     }
   }
 
-  // 4️⃣ Créer (ou récupérer) un acheteur (email unique)
+  //  Créer (ou récupérer) un acheteur (email unique)
   await prisma.utilisateur.upsert({
     where: { email: "awa@mail.com" },
     update: {
