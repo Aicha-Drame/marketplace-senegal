@@ -24,7 +24,16 @@ app.get("/", (req, res) => {
 app.get("/utilisateurs", async (req, res) => {
   try {
     const utilisateurs = await prisma.utilisateur.findMany({
-      include: { boutique: true },
+      select: {
+        id: true,
+        nom: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        boutique: {
+          select: { id: true, nom: true, description: true, createdAt: true },
+        },
+      },
     });
     res.json(utilisateurs);
   } catch (err) {
@@ -66,11 +75,17 @@ app.post("/utilisateurs", async (req, res) => {
 app.get("/boutiques", async (req, res) => {
   try {
     const boutiques = await prisma.boutique.findMany({
-      include: {
-        vendeur: true,
-        produits: true,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        nom: true,
+        description: true,
+        createdAt: true,
+        vendeur: { select: { id: true, nom: true } },
+        _count: { select: { produits: true } }, // nombre de produits
       },
     });
+
     res.json(boutiques);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -124,12 +139,12 @@ app.get("/produits", async (req, res) => {
     const { categorie, q, min, max } = req.query;
 
     const where = {
-      ...(categorie ? { categorie } : {}),
+      ...(categorie ? { categorie: String(categorie) } : {}),
       ...(q
         ? {
             OR: [
-              { titre: { contains: q, mode: "insensitive" } },
-              { description: { contains: q, mode: "insensitive" } },
+              { titre: { contains: String(q), mode: "insensitive" } },
+              { description: { contains: String(q), mode: "insensitive" } },
             ],
           }
         : {}),
@@ -146,8 +161,21 @@ app.get("/produits", async (req, res) => {
     const produits = await prisma.produit.findMany({
       where,
       orderBy: { createdAt: "desc" },
-      include: {
-        boutique: true,
+      select: {
+        id: true,
+        titre: true,
+        description: true,
+        prix: true,
+        image: true,
+        categorie: true,
+        stock: true,
+        createdAt: true,
+        boutique: {
+          select: {
+            id: true,
+            nom: true,
+          },
+        },
       },
     });
 
