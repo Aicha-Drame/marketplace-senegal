@@ -74,23 +74,45 @@ app.post("/utilisateurs", async (req, res) => {
 // Lister toutes les boutiques
 app.get("/boutiques", async (req, res) => {
   try {
-    const boutiques = await prisma.boutique.findMany({
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        nom: true,
-        description: true,
-        createdAt: true,
-        vendeur: { select: { id: true, nom: true } },
-        _count: { select: { produits: true } }, // nombre de produits
-      },
-    });
+    const { page = "1", limit = "12" } = req.query;
 
-    res.json(boutiques);
+    const pageNum = Math.max(1, Number(page) || 1);
+    const limitNum = Math.min(50, Math.max(1, Number(limit) || 12));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [total, boutiques] = await Promise.all([
+      prisma.boutique.count(),
+      prisma.boutique.findMany({
+        skip,
+        take: limitNum,
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          nom: true,
+          description: true,
+          createdAt: true,
+          vendeur: {
+            select: { id: true, nom: true },
+          },
+          _count: {
+            select: { produits: true },
+          },
+        },
+      }),
+    ]);
+
+    res.json({
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      data: boutiques,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Créer une boutique
 app.post("/boutiques", async (req, res) => {
@@ -136,7 +158,19 @@ app.post("/boutiques", async (req, res) => {
 // Lister tous les produits (avec filtres)
 app.get("/produits", async (req, res) => {
   try {
-    const { categorie, q, min, max } = req.query;
+    const {
+      categorie,
+      q,
+      min,
+      max,
+      page = "1",
+      limit = "12",
+      sort = "recent",
+    } = req.query;
+
+    const pageNum = Math.max(1, Number(page) || 1);
+    const limitNum = Math.min(50, Math.max(1, Number(limit) || 12));
+    const skip = (pageNum - 1) * limitNum;
 
     const where = {
       ...(categorie ? { categorie: String(categorie) } : {}),
@@ -158,28 +192,46 @@ app.get("/produits", async (req, res) => {
         : {}),
     };
 
-    const produits = await prisma.produit.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        titre: true,
-        description: true,
-        prix: true,
-        image: true,
-        categorie: true,
-        stock: true,
-        createdAt: true,
-        boutique: {
-          select: {
-            id: true,
-            nom: true,
+    const orderBy =
+      sort === "price_asc"
+        ? { prix: "asc" }
+        : sort === "price_desc"
+          ? { prix: "desc" }
+          : { createdAt: "desc" };
+
+    const [total, produits] = await Promise.all([
+      prisma.produit.count({ where }),
+      prisma.produit.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limitNum,
+        select: {
+          id: true,
+          titre: true,
+          description: true,
+          prix: true,
+          image: true,
+          categorie: true,
+          stock: true,
+          createdAt: true,
+          boutique: {
+            select: {
+              id: true,
+              nom: true,
+            },
           },
         },
-      },
-    });
+      }),
+    ]);
 
-    res.json(produits);
+    res.json({
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+      data: produits,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
