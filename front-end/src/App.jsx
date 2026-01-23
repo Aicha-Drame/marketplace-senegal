@@ -1,35 +1,56 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// On importe useState depuis React
+import { useState } from "react";
+
+// On importe nos pages
+import Home from "./pages/Home";
+import Cart from "./pages/Cart";
+import Product from "./pages/Product";
+import BottomNav from "./components/BottomNav";
 
 function App() {
-  const [count, setCount] = useState(0)
+  // page = quelle page est affichée ("home", "cart", "product")
+  const [page, setPage] = useState("home");
+
+  // cart = liste des produits ajoutés au panier
+  const [cart, setCart] = useState([]);
+
+  // currentProduct = produit sélectionné pour la page détail
+  const [currentProduct, setCurrentProduct] = useState(null);
+
+  // Fonction pour ajouter un produit au panier
+  const addToCart = (product) => {
+    setCart([...cart, product]);
+  };
+
+  // Fonction pour ouvrir la page détail d’un produit
+  const openProduct = (product) => {
+    setCurrentProduct(product);
+    setPage("product");
+  };
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {/* Si la page est "home", on affiche Home */}
+      {page === "home" && (
+        <Home addToCart={addToCart} openProduct={openProduct} />
+      )}
+
+      {/* Si la page est "product", on affiche la page détail */}
+      {page === "product" && (
+        <Product
+          product={currentProduct}
+          addToCart={addToCart}
+          goBack={() => setPage("home")}
+        />
+      )}
+
+      {/* Si la page est "cart", on affiche le panier */}
+      {page === "cart" && <Cart cart={cart} />}
+
+      {/* Barre de navigation en bas */}
+      <BottomNav setPage={setPage} />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
