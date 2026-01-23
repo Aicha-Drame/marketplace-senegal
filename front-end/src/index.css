@@ -1,0 +1,17 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, Arial, sans-serif;
+  background: #ffffff;
+  color: #111;
+}
+
+button {
+  border-radius: 8px;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+}
