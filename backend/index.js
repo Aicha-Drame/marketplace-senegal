@@ -406,51 +406,83 @@ app.get("/commandes", async (req, res) => {
   }
 });
 
-// Créer une commande
+// Créer une commande (items: [{ produitId, quantite }])
 app.post("/commandes", async (req, res) => {
   try {
     const { utilisateurId, items } = req.body;
 
     if (!utilisateurId || !Array.isArray(items) || items.length === 0) {
-      return res
-        .status(400)
-        .json({ error: "utilisateurId et items sont requis." });
+      return res.status(400).json({
+        error: "utilisateurId et items[] sont requis.",
+      });
     }
 
-    const produitsIds = items.map((i) => Number(i.produitId));
+    const userId = Number(utilisateurId);
+    if (!userId) {
+      return res.status(400).json({ error: "utilisateurId invalide." });
+    }
+
+    // Normaliser / valider items
+    const cleanItems = items.map((i) => ({
+      produitId: Number(i.produitId),
+      quantite: Number(i.quantite),
+    }));
+
+    if (
+      cleanItems.some((i) => !i.produitId || !i.quantite || i.quantite <= 0)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Chaque item doit avoir produitId et quantite > 0." });
+    }
+
+    // Charger produits
+    const produitIds = cleanItems.map((i) => i.produitId);
     const produits = await prisma.produit.findMany({
-      where: { id: { in: produitsIds } },
+      where: { id: { in: produitIds } },
+      select: { id: true, titre: true, prix: true, stock: true },
     });
 
+    if (produits.length !== cleanItems.length) {
+      return res
+        .status(400)
+        .json({ error: "Un ou plusieurs produits sont invalides." });
+    }
+
+    // Calcul total + check stock
     let total = 0;
 
-    const itemsData = items.map((i) => {
-      const produit = produits.find((p) => p.id === Number(i.produitId));
-      if (!produit) throw new Error("Produit introuvable.");
+    const itemsData = cleanItems.map((i) => {
+      const p = produits.find((x) => x.id === i.produitId);
+      if (!p) throw new Error("Produit introuvable.");
 
-      if (produit.stock < i.quantite) {
-        throw new Error(`Stock insuffisant pour ${produit.titre}`);
+      if (p.stock < i.quantite) {
+        throw new Error(`Stock insuffisant pour ${p.titre}`);
       }
 
-      total += produit.prix * i.quantite;
+      total += p.prix * i.quantite;
 
       return {
-        produitId: produit.id,
+        produitId: p.id,
         quantite: i.quantite,
-        prixUnitaire: produit.prix,
+        prixUnitaire: p.prix,
       };
     });
 
+    // Transaction : créer commande + items + décrémenter stock
     const commande = await prisma.$transaction(async (tx) => {
       const created = await tx.commande.create({
         data: {
-          utilisateurId: Number(utilisateurId),
+          utilisateurId: userId,
           total,
+          status: "EN_ATTENTE",
           items: { create: itemsData },
         },
         include: {
+          utilisateur: {
+            select: { id: true, nom: true, email: true, role: true },
+          },
           items: { include: { produit: true } },
-          utilisateur: true,
         },
       });
 
@@ -467,97 +499,6 @@ app.post("/commandes", async (req, res) => {
     res.status(201).json(commande);
   } catch (err) {
     res.status(400).json({ error: err.message });
-  }
-});
-
-// Créer une commande
-app.post("/commandes", async (req, res) => {
-  try {
-    const { utilisateurId, items } = req.body;
-
-    if (!utilisateurId || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({
-        error: "utilisateurId et items sont requis.",
-      });
-    }
-
-    // Récupérer les produits concernés
-    const productIds = items.map((i) => Number(i.produitId));
-
-    const produits = await prisma.produit.findMany({
-      where: { id: { in: productIds } },
-    });
-
-    if (produits.length !== items.length) {
-      return res
-        .status(400)
-        .json({ error: "Produit invalide dans la commande." });
-    }
-
-    // Calcul du total + vérification stock
-    let total = 0;
-
-    for (const item of items) {
-      const produit = produits.find((p) => p.id === Number(item.produitId));
-      const quantite = Number(item.quantite);
-
-      if (!quantite || quantite <= 0) {
-        return res.status(400).json({ error: "Quantité invalide." });
-      }
-
-      if (produit.stock < quantite) {
-        return res.status(400).json({
-          error: `Stock insuffisant pour ${produit.titre}`,
-        });
-      }
-
-      total += produit.prix * quantite;
-    }
-
-    // Transaction : créer commande + items + décrémenter stock
-    const commande = await prisma.$transaction(async (tx) => {
-      const newCommande = await tx.commande.create({
-        data: {
-          utilisateurId,
-          total,
-          statut: "EN_ATTENTE",
-          items: {
-            create: items.map((item) => ({
-              produitId: Number(item.produitId),
-              quantite: Number(item.quantite),
-              prixUnitaire: produits.find(
-                (p) => p.id === Number(item.produitId),
-              ).prix,
-            })),
-          },
-        },
-        include: {
-          items: {
-            include: {
-              produit: true,
-            },
-          },
-        },
-      });
-
-      // Décrémenter le stock
-      for (const item of items) {
-        await tx.produit.update({
-          where: { id: Number(item.produitId) },
-          data: {
-            stock: {
-              decrement: Number(item.quantite),
-            },
-          },
-        });
-      }
-
-      return newCommande;
-    });
-
-    res.status(201).json(commande);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
 });
 
