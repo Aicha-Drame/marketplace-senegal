@@ -1,24 +1,62 @@
-// Page Panier : affiche les produits ajoutés
-export default function Cart({ cart }) {
-  // On calcule le total
-  const total = cart.reduce((s, p) => s + p.price, 0);
+export default function Cart({ cart, increaseQty, decreaseQty }) {
+  const total = cart.reduce(
+    (sum, p) => sum + p.price * p.qty,
+    0
+  );
 
   return (
     <div style={{ padding: 16 }}>
-      <h2>Panier</h2>
+      <h2>Mon panier</h2>
 
-      {/* Liste des produits du panier */}
-      {cart.map((p, i) => (
-        <p key={i}>
-          {p.name} – {p.price} CFA
-        </p>
+      {cart.length === 0 && <p>Votre panier est vide.</p>}
+
+      {cart.map((p) => (
+        <div
+          key={p.id}
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 12,
+            padding: 10,
+            border: "1px solid #ddd",
+            borderRadius: 8,
+          }}
+        >
+          <div>
+            <strong>{p.name}</strong>
+            <div>{p.price} CFA</div>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button onClick={() => decreaseQty(p.id)}>-</button>
+            <span>{p.qty}</span>
+            <button onClick={() => increaseQty(p.id)}>+</button>
+          </div>
+        </div>
       ))}
 
-      {/* Total */}
-      <h3>Total : {total} CFA</h3>
+      {cart.length > 0 && (
+        <>
+          <hr />
+          <h3>Total : {total} CFA</h3>
 
-      {/* Bouton fictif de commande */}
-      <button>Commander</button>
+          <button
+            style={{
+              width: "100%",
+              padding: 12,
+              marginTop: 12,
+              borderRadius: 8,
+              background: "#16a34a",
+              color: "white",
+              border: "none",
+            }}
+            onClick={() => alert("Commande envoyée (simulation)")}
+          >
+            Passer commande
+          </button>
+        </>
+      )}
     </div>
   );
 }

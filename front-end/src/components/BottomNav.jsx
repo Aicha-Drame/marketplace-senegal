@@ -1,5 +1,4 @@
-// Barre de navigation en bas de l'écran
-export default function BottomNav({ setPage }) {
+export default function BottomNav({ setPage, user, setUser }) {
   return (
     <div
       style={{
@@ -14,8 +13,30 @@ export default function BottomNav({ setPage }) {
         borderTop: "1px solid #ddd",
       }}
     >
-      <button onClick={() => setPage("home")}>Accueil</button>
-      <button onClick={() => setPage("cart")}>Panier</button>
+      {user.role === "buyer" && (
+        <>
+          <button onClick={() => setPage("home")}>Accueil</button>
+          <button onClick={() => setPage("cart")}>Panier</button>
+        </>
+      )}
+
+      {user.role === "seller" && (
+        <>
+          <button onClick={() => setPage("seller")}>Dashboard</button>
+        </>
+      )}
+
+      {/* Bouton pour changer de rôle (simulation) */}
+      <button
+        onClick={() =>
+          setUser((u) => ({
+            ...u,
+            role: u.role === "buyer" ? "seller" : "buyer",
+          }))
+        }
+      >
+        Mode : {user.role}
+      </button>
     </div>
   );
 }

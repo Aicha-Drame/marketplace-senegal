@@ -1,31 +1,55 @@
-// Composant qui affiche un produit
+// Composant carte produit (Home / Grille)
 export default function ProductCard({ product, onAdd, onOpen }) {
   return (
     <div
-      style={{
-        border: "1px solid #ddd",
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 10,
-        cursor: "pointer",
-      }}
-      // Quand on clique sur la carte, on ouvre la page produit
+      className="card"
       onClick={() => onOpen(product)}
+      style={{ cursor: "pointer" }}
     >
-      <h4>{product.name}</h4>
-      <p>{product.price} CFA</p>
-      <small>Stock : {product.stock}</small>
-      <br />
+      {/* Image principale */}
+      {product.images?.[0] ? (
+        <img
+          src={product.images[0]}
+          alt={product.name}
+          style={{
+            width: "100%",
+            height: 160,
+            objectFit: "cover",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            height: 160,
+            background: "#f3f4f6",
+          }}
+        />
+      )}
 
-      {/* Bouton pour ajouter au panier */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation(); // empêche d’ouvrir la page produit
-          onAdd(product);
-        }}
-      >
-        Ajouter
-      </button>
+      {/* Infos produit */}
+      <div style={{ padding: 12 }}>
+        <h4 style={{ marginBottom: 4 }}>{product.name}</h4>
+
+        <p style={{ fontWeight: "bold", fontSize: 16, marginBottom: 4 }}>
+          {product.price} CFA
+        </p>
+
+        <small style={{ color: "#6b7280" }}>
+          Stock : {product.stock}
+        </small>
+
+        {/* Bouton CTA */}
+        <button
+          className="primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd(product);
+          }}
+          style={{ width: "100%", marginTop: 10 }}
+        >
+          Ajouter au panier
+        </button>
+      </div>
     </div>
   );
 }

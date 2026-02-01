@@ -1,17 +1,156 @@
+/* =========================
+   RESET & BASE
+========================= */
 * {
   box-sizing: border-box;
-}
-
-body {
   margin: 0;
-  font-family: system-ui, Arial, sans-serif;
-  background: #ffffff;
-  color: #111;
+  padding: 0;
 }
 
+/* =========================
+   DESIGN SYSTEM (VARIABLES)
+========================= */
+:root {
+  --primary: #ff6a00;      /* Orange SenShop */
+  --secondary: #16a34a;    /* Vert alimentation */
+  --background: #f9fafb;  /* Fond clair */
+  --text: #1f2937;        /* Texte principal */
+  --border: #e5e7eb;      /* Bordures */
+  --muted: #6b7280;       /* Texte secondaire */
+}
+
+/* =========================
+   GLOBAL
+========================= */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  background: var(--background);
+  color: var(--text);
+}
+
+/* =========================
+   TITRES & TEXTES
+========================= */
+h1, h2, h3, h4 {
+  font-weight: 600;
+}
+
+p {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* =========================
+   INPUTS & SELECT
+========================= */
+input,
+select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* =========================
+   BOUTONS
+========================= */
 button {
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
-  padding: 8px 12px;
+  padding: 10px 14px;
   cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+button.primary {
+  background: var(--primary);
+  color: white;
+}
+
+button.secondary {
+  background: white;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   CARTES (PRODUITS, BLOCS)
+========================= */
+.card {
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+/* =========================
+   GRILLE PRODUITS (HOME)
+========================= */
+.products-grid {
+  display: grid;
+  grid-template-columns: 1fr; /* 📱 Mobile : 1 produit */
+  gap: 16px;
+}
+
+/* 📱 Tablette */
+@media (min-width: 640px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 💻 Ordinateur */
+@media (min-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* =========================
+   IMAGES
+========================= */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* =========================
+   BOTTOM NAVIGATION
+========================= */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  background: white;
+  border-top: 1px solid var(--border);
+}
+
+.bottom-nav button {
+  background: none;
+  color: var(--muted);
+}
+
+.bottom-nav button.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* =========================
+   ESPACEMENT PAGE
+========================= */
+.page {
+  padding: 16px;
+  padding-bottom: 80px; /* espace pour la bottom nav */
 }
