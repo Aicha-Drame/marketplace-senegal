@@ -2,6 +2,7 @@ const express = require("express");
 const { PrismaClient } = require("@prisma/client");
 const cors = require("cors");
 require("dotenv").config();
+const bcrypt = require("bcrypt");
 
 const jwt = require("jsonwebtoken");
 
@@ -50,11 +51,14 @@ app.post("/auth/register", async (req, res) => {
       return res.status(409).json({ error: "Email déjà utilisé." });
     }
 
+    // ✅ Hash du mot de passe
+    const hashedPassword = await bcrypt.hash(motdepasse, 10);
+
     const user = await prisma.utilisateur.create({
       data: {
         nom,
         email,
-        motdepasse, // ⚠️ MVP : en clair. Plus tard on hash.
+        motdepasse: hashedPassword,
         role: role || "ACHETEUR",
       },
       select: { id: true, nom: true, email: true, role: true, createdAt: true },
@@ -81,7 +85,13 @@ app.post("/auth/login", async (req, res) => {
     }
 
     const user = await prisma.utilisateur.findUnique({ where: { email } });
-    if (!user || user.motdepasse !== motdepasse) {
+    if (!user) {
+      return res.status(401).json({ error: "Identifiants invalides." });
+    }
+
+    // ✅ Compare hash
+    const isValid = await bcrypt.compare(motdepasse, user.motdepasse);
+    if (!isValid) {
       return res.status(401).json({ error: "Identifiants invalides." });
     }
 
