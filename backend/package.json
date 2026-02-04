@@ -2,13 +2,13 @@
   "name": "marketplace-backend",
   "version": "1.0.0",
   "main": "index.js",
- "scripts": {
-  "dev": "node index.js",
-  "start": "node index.js",
-  "seed": "node seed.js",
-  "prisma:generate": "prisma generate",
-  "prisma:migrate": "prisma migrate dev"
-},
+  "scripts": {
+    "dev": "node index.js",
+    "start": "node index.js",
+    "seed": "node seed.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -17,7 +17,8 @@
     "@prisma/client": "6.19.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
     "prisma": "6.19.1"
