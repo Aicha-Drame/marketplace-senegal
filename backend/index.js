@@ -3,6 +3,23 @@ const { PrismaClient } = require("@prisma/client");
 const cors = require("cors");
 require("dotenv").config();
 
+const jwt = require("jsonwebtoken");
+
+function authRequired(req, res, next) {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+
+  if (!token) return res.status(401).json({ error: "Token manquant." });
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = payload; // { userId, role, email }
+    next();
+  } catch (e) {
+    return res.status(401).json({ error: "Token invalide ou expiré." });
+  }
+}
+
 const app = express();
 const prisma = new PrismaClient();
 
@@ -14,6 +31,86 @@ app.use(express.json());
 // ----------------------
 app.get("/", (req, res) => {
   res.json({ ok: true, service: "marketplace-backend" });
+});
+
+// ----------------------
+// AUTH (JWT simple)
+// ----------------------
+
+app.post("/auth/register", async (req, res) => {
+  try {
+    const { nom, email, motdepasse, role } = req.body;
+
+    if (!nom || !email || !motdepasse) {
+      return res.status(400).json({ error: "nom, email, motdepasse requis." });
+    }
+
+    const existing = await prisma.utilisateur.findUnique({ where: { email } });
+    if (existing) {
+      return res.status(409).json({ error: "Email déjà utilisé." });
+    }
+
+    const user = await prisma.utilisateur.create({
+      data: {
+        nom,
+        email,
+        motdepasse, // ⚠️ MVP : en clair. Plus tard on hash.
+        role: role || "ACHETEUR",
+      },
+      select: { id: true, nom: true, email: true, role: true, createdAt: true },
+    });
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
+    );
+
+    res.status(201).json({ user, token });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post("/auth/login", async (req, res) => {
+  try {
+    const { email, motdepasse } = req.body;
+
+    if (!email || !motdepasse) {
+      return res.status(400).json({ error: "email et motdepasse requis." });
+    }
+
+    const user = await prisma.utilisateur.findUnique({ where: { email } });
+    if (!user || user.motdepasse !== motdepasse) {
+      return res.status(401).json({ error: "Identifiants invalides." });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.role, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "7d" },
+    );
+
+    res.json({
+      user: { id: user.id, nom: user.nom, email: user.email, role: user.role },
+      token,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Optionnel: vérifier le token
+app.get("/auth/me", authRequired, async (req, res) => {
+  try {
+    const user = await prisma.utilisateur.findUnique({
+      where: { id: req.user.userId },
+      select: { id: true, nom: true, email: true, role: true, createdAt: true },
+    });
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ----------------------
@@ -407,19 +504,15 @@ app.get("/commandes", async (req, res) => {
 });
 
 // Créer une commande (items: [{ produitId, quantite }])
-app.post("/commandes", async (req, res) => {
+app.post("/commandes", authRequired, async (req, res) => {
   try {
-    const { utilisateurId, items } = req.body;
+    const { items } = req.body;
+    const userId = req.user.userId;
 
-    if (!utilisateurId || !Array.isArray(items) || items.length === 0) {
+    if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({
-        error: "utilisateurId et items[] sont requis.",
+        error: "items[] est requis.",
       });
-    }
-
-    const userId = Number(utilisateurId);
-    if (!userId) {
-      return res.status(400).json({ error: "utilisateurId invalide." });
     }
 
     // Normaliser / valider items
@@ -501,7 +594,6 @@ app.post("/commandes", async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 });
-
 
 // ----------------------
 // SERVER
