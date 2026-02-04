@@ -113,7 +113,6 @@ app.get("/boutiques", async (req, res) => {
   }
 });
 
-
 // Créer une boutique
 app.post("/boutiques", async (req, res) => {
   try {
@@ -237,6 +236,86 @@ app.get("/produits", async (req, res) => {
   }
 });
 
+// Modifier un produit (prix / stock / titre / description / image / categorie)
+app.patch("/produits/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ error: "ID produit invalide." });
+
+    const {
+      titre,
+      description,
+      prix,
+      image,
+      categorie,
+      stock,
+      boutiqueId, // optionnel: généralement on ne change pas ça, mais laissé si besoin
+    } = req.body;
+
+    // Construire un objet "data" uniquement avec les champs fournis
+    const data = {};
+
+    if (titre !== undefined) data.titre = String(titre).trim();
+    if (description !== undefined)
+      data.description = String(description).trim();
+    if (image !== undefined) data.image = String(image).trim();
+    if (categorie !== undefined) data.categorie = String(categorie).trim();
+
+    if (prix !== undefined) {
+      const p = Number(prix);
+      if (Number.isNaN(p) || p < 0) {
+        return res.status(400).json({ error: "prix invalide." });
+      }
+      data.prix = p;
+    }
+
+    if (stock !== undefined) {
+      const s = Number(stock);
+      if (!Number.isInteger(s) || s < 0) {
+        return res.status(400).json({ error: "stock invalide (entier >= 0)." });
+      }
+      data.stock = s;
+    }
+
+    if (boutiqueId !== undefined) {
+      const b = Number(boutiqueId);
+      if (!b) return res.status(400).json({ error: "boutiqueId invalide." });
+      data.boutiqueId = b;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({
+        error:
+          "Aucun champ à modifier. Envoie au moins un champ (prix, stock, titre...).",
+      });
+    }
+
+    const produit = await prisma.produit.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        titre: true,
+        description: true,
+        prix: true,
+        image: true,
+        categorie: true,
+        stock: true,
+        createdAt: true,
+        boutique: { select: { id: true, nom: true } },
+      },
+    });
+
+    res.json(produit);
+  } catch (err) {
+    // Prisma: record not found
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Produit introuvable." });
+    }
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Créer un produit
 app.post("/produits", async (req, res) => {
   try {
@@ -327,51 +406,83 @@ app.get("/commandes", async (req, res) => {
   }
 });
 
-// Créer une commande
+// Créer une commande (items: [{ produitId, quantite }])
 app.post("/commandes", async (req, res) => {
   try {
     const { utilisateurId, items } = req.body;
 
     if (!utilisateurId || !Array.isArray(items) || items.length === 0) {
-      return res
-        .status(400)
-        .json({ error: "utilisateurId et items sont requis." });
+      return res.status(400).json({
+        error: "utilisateurId et items[] sont requis.",
+      });
     }
 
-    const produitsIds = items.map((i) => Number(i.produitId));
+    const userId = Number(utilisateurId);
+    if (!userId) {
+      return res.status(400).json({ error: "utilisateurId invalide." });
+    }
+
+    // Normaliser / valider items
+    const cleanItems = items.map((i) => ({
+      produitId: Number(i.produitId),
+      quantite: Number(i.quantite),
+    }));
+
+    if (
+      cleanItems.some((i) => !i.produitId || !i.quantite || i.quantite <= 0)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Chaque item doit avoir produitId et quantite > 0." });
+    }
+
+    // Charger produits
+    const produitIds = cleanItems.map((i) => i.produitId);
     const produits = await prisma.produit.findMany({
-      where: { id: { in: produitsIds } },
+      where: { id: { in: produitIds } },
+      select: { id: true, titre: true, prix: true, stock: true },
     });
 
+    if (produits.length !== cleanItems.length) {
+      return res
+        .status(400)
+        .json({ error: "Un ou plusieurs produits sont invalides." });
+    }
+
+    // Calcul total + check stock
     let total = 0;
 
-    const itemsData = items.map((i) => {
-      const produit = produits.find((p) => p.id === Number(i.produitId));
-      if (!produit) throw new Error("Produit introuvable.");
+    const itemsData = cleanItems.map((i) => {
+      const p = produits.find((x) => x.id === i.produitId);
+      if (!p) throw new Error("Produit introuvable.");
 
-      if (produit.stock < i.quantite) {
-        throw new Error(`Stock insuffisant pour ${produit.titre}`);
+      if (p.stock < i.quantite) {
+        throw new Error(`Stock insuffisant pour ${p.titre}`);
       }
 
-      total += produit.prix * i.quantite;
+      total += p.prix * i.quantite;
 
       return {
-        produitId: produit.id,
+        produitId: p.id,
         quantite: i.quantite,
-        prixUnitaire: produit.prix,
+        prixUnitaire: p.prix,
       };
     });
 
+    // Transaction : créer commande + items + décrémenter stock
     const commande = await prisma.$transaction(async (tx) => {
       const created = await tx.commande.create({
         data: {
-          utilisateurId: Number(utilisateurId),
+          utilisateurId: userId,
           total,
+          status: "EN_ATTENTE",
           items: { create: itemsData },
         },
         include: {
+          utilisateur: {
+            select: { id: true, nom: true, email: true, role: true },
+          },
           items: { include: { produit: true } },
-          utilisateur: true,
         },
       });
 
