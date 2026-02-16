@@ -11,42 +11,70 @@ import Login from "./pages/Login";
 import { products as baseProducts } from "./data/products";
 
 function App() {
+
+  // =============================
+  // NAVIGATION
+  // =============================
   const [page, setPage] = useState("home");
   const [currentProduct, setCurrentProduct] = useState(null);
 
-  // Utilisateur (null = pas connecté)
+  // =============================
+  // UTILISATEUR
+  // =============================
   const [user, setUser] = useState(null);
 
-  // Panier (chargé depuis localStorage)
+  // =============================
+  // PANIER
+  // =============================
   const [cart, setCart] = useState(() => {
     const saved = localStorage.getItem("cart");
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Produits vendeur (chargés depuis localStorage)
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
+
+  // =============================
+  // PRODUITS VENDEUR
+  // =============================
   const [sellerProducts, setSellerProducts] = useState(() => {
     const saved = localStorage.getItem("sellerProducts");
     return saved ? JSON.parse(saved) : [];
   });
 
-  // Sauvegarde automatique du panier
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cart));
-  }, [cart]);
-
-  // Sauvegarde automatique des produits vendeur
-  useEffect(() => {
-    localStorage.setItem("sellerProducts", JSON.stringify(sellerProducts));
+    localStorage.setItem(
+      "sellerProducts",
+      JSON.stringify(sellerProducts)
+    );
   }, [sellerProducts]);
 
-  // Ajoute un produit au panier ou augmente sa quantité
+  // =============================
+  // COMMANDES
+  // =============================
+  const [orders, setOrders] = useState(() => {
+    const saved = localStorage.getItem("orders");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("orders", JSON.stringify(orders));
+  }, [orders]);
+
+  // =============================
+  // FONCTIONS PANIER
+  // =============================
+
   const addToCart = (product) => {
     setCart((prev) => {
       const found = prev.find((p) => p.id === product.id);
 
       if (found) {
         return prev.map((p) =>
-          p.id === product.id ? { ...p, qty: p.qty + 1 } : p
+          p.id === product.id
+            ? { ...p, qty: p.qty + 1 }
+            : p
         );
       }
 
@@ -54,7 +82,6 @@ function App() {
     });
   };
 
-  // Augmente la quantité
   const increaseQty = (id) => {
     setCart((prev) =>
       prev.map((p) =>
@@ -63,7 +90,6 @@ function App() {
     );
   };
 
-  // Diminue la quantité (supprime si 0)
   const decreaseQty = (id) => {
     setCart((prev) =>
       prev
@@ -74,26 +100,89 @@ function App() {
     );
   };
 
-  // Ouvrir un produit
+  // =============================
+  // PASSER COMMANDE
+  // =============================
+
+  const placeOrder = () => {
+    if (cart.length === 0) return;
+
+    const newOrder = {
+      id: Date.now(),
+      items: cart,
+      total: cart.reduce(
+        (sum, item) => sum + item.price * item.qty,
+        0
+      ),
+      date: new Date().toLocaleString(),
+      status: "En attente",
+    };
+
+    setOrders((prev) => [...prev, newOrder]);
+    setCart([]);
+    setPage("home");
+  };
+
+  // =============================
+  // METTRE À JOUR STATUT COMMANDE
+  // =============================
+
+  const updateOrderStatus = (orderId, newStatus) => {
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId
+          ? { ...order, status: newStatus }
+          : order
+      )
+    );
+  };
+
+  // =============================
+  // PRODUITS VENDEUR
+  // =============================
+
+  const addSellerProduct = (product) => {
+    setSellerProducts((prev) => [...prev, product]);
+  };
+
+  const deleteSellerProduct = (id) => {
+    setSellerProducts((prev) =>
+      prev.filter((p) => p.id !== id)
+    );
+  };
+
+  const updateSellerProduct = (updatedProduct) => {
+    setSellerProducts((prev) =>
+      prev.map((p) =>
+        p.id === updatedProduct.id
+          ? updatedProduct
+          : p
+      )
+    );
+  };
+
+  // =============================
+  // PRODUIT DETAIL
+  // =============================
+
   const openProduct = (product) => {
     setCurrentProduct(product);
     setPage("product");
   };
 
-  // Ajouter un produit côté vendeur
-  const addSellerProduct = (product) => {
-    setSellerProducts((prev) => [...prev, product]);
-  };
-
-  // Tous les produits visibles côté acheteur
   const allProducts = [...baseProducts, ...sellerProducts];
+
+  // =============================
+  // RENDER
+  // =============================
 
   return (
     <>
-      {/* Page de connexion */}
+      {/* LOGIN */}
       {!user && <Login onLogin={setUser} />}
 
-      {/* Pages acheteur */}
+      {/* ================= ACHETEUR ================= */}
+
       {user && user.role === "buyer" && page === "home" && (
         <Home
           products={allProducts}
@@ -115,14 +204,23 @@ function App() {
           cart={cart}
           increaseQty={increaseQty}
           decreaseQty={decreaseQty}
+          placeOrder={placeOrder}
         />
       )}
 
-      {/* Pages vendeur */}
+      {/* ================= VENDEUR ================= */}
+
       {user && user.role === "seller" && page === "seller" && (
         <SellerDashboard
           products={sellerProducts}
+          orders={orders}
+          updateOrderStatus={updateOrderStatus}
           goAdd={() => setPage("add-product")}
+          onDelete={deleteSellerProduct}
+          onEdit={(product) => {
+            setCurrentProduct(product);
+            setPage("edit-product");
+          }}
         />
       )}
 
@@ -133,8 +231,22 @@ function App() {
         />
       )}
 
-      {/* Navigation */}
-      {user && <BottomNav setPage={setPage} user={user} setUser={setUser} />}
+      {user && user.role === "seller" && page === "edit-product" && (
+        <AddProduct
+          product={currentProduct}
+          onUpdate={updateSellerProduct}
+          goBack={() => setPage("seller")}
+        />
+      )}
+
+      {/* NAVIGATION */}
+      {user && (
+        <BottomNav
+          setPage={setPage}
+          user={user}
+          setUser={setUser}
+        />
+      )}
     </>
   );
 }

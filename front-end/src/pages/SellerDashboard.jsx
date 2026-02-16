@@ -1,85 +1,142 @@
-// Page du tableau de bord vendeur
-export default function SellerDashboard({ products, goAdd }) {
-  // Calcul du stock total de tous les produits
+// Dashboard vendeur - version avancée
+export default function SellerDashboard({
+  products,
+  orders,
+  updateOrderStatus,
+  goAdd,
+  onDelete,
+  onEdit,
+}) {
+
   const totalStock = products.reduce(
     (sum, p) => sum + Number(p.stock || 0),
     0
   );
 
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Tableau de bord vendeur</h2>
+    <div className="page">
 
-      {/* Zone de statistiques rapides */}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          marginBottom: 20,
-        }}
-      >
-        {/* Carte : nombre de produits */}
-        <div style={cardStyle}>
+      <h2 className="seller-title">
+        Tableau de bord vendeur
+      </h2>
+
+      {/* ================= STATS ================= */}
+      <div className="seller-stats">
+        <div className="seller-stat">
           <strong>{products.length}</strong>
           <div>Produits</div>
         </div>
 
-        {/* Carte : stock total */}
-        <div style={cardStyle}>
+        <div className="seller-stat">
           <strong>{totalStock}</strong>
           <div>Stock total</div>
         </div>
 
-        {/* Carte : commandes (simulées pour l’instant) */}
-        <div style={cardStyle}>
-          <strong>0</strong>
+        <div className="seller-stat">
+          <strong>{orders.length}</strong>
           <div>Commandes</div>
         </div>
       </div>
 
-      {/* Bouton pour aller à la page "Ajouter un produit" */}
       <button
+        className="primary add-product-btn"
         onClick={goAdd}
-        style={{
-          width: "100%",
-          padding: 12,
-          marginBottom: 16,
-          borderRadius: 8,
-        }}
       >
         + Ajouter un produit
       </button>
 
-      <h3>Mes produits</h3>
+      {/* ================= COMMANDES ================= */}
+      <h3 style={{ marginTop: 30 }}>
+        Commandes reçues
+      </h3>
 
-      {/* Message si aucun produit */}
-      {products.length === 0 && <p>Aucun produit pour le moment.</p>}
+      {orders.length === 0 && (
+        <p>Aucune commande pour le moment.</p>
+      )}
 
-      {/* Liste des produits du vendeur */}
-      {products.map((p) => (
+      {orders.map((order) => (
         <div
-          key={p.id}
-          style={{
-            border: "1px solid #ddd",
-            padding: 10,
-            borderRadius: 8,
-            marginBottom: 10,
-          }}
+          key={order.id}
+          className="card"
+          style={{ padding: 12, marginBottom: 12 }}
         >
-          <strong>{p.name}</strong>
-          <div>Prix : {p.price} CFA</div>
-          <div>Stock : {p.stock}</div>
+          <strong>
+            Commande #{order.id}
+          </strong>
+
+          <div>Date : {order.date}</div>
+          <div>Total : {order.total} CFA</div>
+
+          <div style={{ marginTop: 8 }}>
+            Statut :
+            <strong> {order.status}</strong>
+          </div>
+
+          {/* Boutons changement statut */}
+          <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+
+            {order.status === "En attente" && (
+              <button
+                className="secondary"
+                onClick={() =>
+                  updateOrderStatus(order.id, "Validée")
+                }
+              >
+                Valider
+              </button>
+            )}
+
+            {order.status === "Validée" && (
+              <button
+                className="primary"
+                onClick={() =>
+                  updateOrderStatus(order.id, "Livrée")
+                }
+              >
+                Marquer livrée
+              </button>
+            )}
+
+          </div>
+        </div>
+      ))}
+
+      {/* ================= PRODUITS ================= */}
+      <h3 style={{ marginTop: 30 }}>
+        Mes produits
+      </h3>
+
+      {products.map((p) => (
+        <div key={p.id} className="seller-product">
+
+          {p.images?.[0] && (
+            <img src={p.images[0]} alt={p.name} />
+          )}
+
+          <div className="seller-product-info">
+            <strong>{p.name}</strong>
+            <div>{p.price} CFA</div>
+            <small>Stock : {p.stock}</small>
+          </div>
+
+          <div className="seller-actions">
+            <button
+              className="secondary"
+              onClick={() => onEdit(p)}
+            >
+              Modifier
+            </button>
+
+            <button
+              style={{ background: "#ef4444", color: "white" }}
+              onClick={() => onDelete(p.id)}
+            >
+              Supprimer
+            </button>
+          </div>
+
         </div>
       ))}
     </div>
   );
 }
-
-// Style commun pour les petites cartes de statistiques
-const cardStyle = {
-  flex: 1,
-  padding: 12,
-  borderRadius: 8,
-  background: "#f5f5f5",
-  textAlign: "center",
-};

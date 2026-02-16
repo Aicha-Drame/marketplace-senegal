@@ -5,38 +5,49 @@ export default function Home({ products, addToCart, openProduct }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
 
-  // Filtrage des produits
+  // 🔎 Filtrage des produits
   const filtered = products.filter((p) => {
-    const matchName = p.name.toLowerCase().includes(query.toLowerCase());
-    const matchCat = category === "all" || p.category === category;
+    const matchName = p.name
+      .toLowerCase()
+      .includes(query.toLowerCase());
+
+    const matchCat =
+      category === "all" || p.category === category;
+
     return matchName && matchCat;
   });
 
   return (
-    <div style={{ padding: 16 }}>
-      {/* Header */}
-      <h2 style={{ marginBottom: 12 }}>SenShop</h2>
+    <div className="page">
 
-      {/* Recherche */}
+      {/* ================= HEADER ================= */}
+      <h2>SenShop</h2>
+
+     <p className="home-tagline">
+       Achetez local. Soutenez les vendeurs sénégalais.
+     </p>
+
+      {/* ================= RECHERCHE ================= */}
       <input
         placeholder="Rechercher un produit..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        style={{ marginBottom: 10 }}
       />
 
-      {/* Filtre catégorie */}
+      {/* ================= FILTRE CATÉGORIES ================= */}
       <select
         value={category}
         onChange={(e) => setCategory(e.target.value)}
-        style={{ marginBottom: 16 }}
       >
         <option value="all">Toutes catégories</option>
-        <option value="Alimentation">Alimentation</option>
+        <option value="Les Essentiels">Les Essentiels</option>
+        <option value="Fruits & Légumes">Fruits & Légumes</option>
+        <option value="Viandes & Poissons">Viandes & Poissons</option>
         <option value="Boissons">Boissons</option>
+        <option value="Produits locaux">Produits locaux</option>
       </select>
 
-      {/* Grille produits */}
+      {/* ================= GRILLE PRODUITS ================= */}
       <div className="products-grid">
         {filtered.map((p) => (
           <ProductCard
@@ -48,8 +59,11 @@ export default function Home({ products, addToCart, openProduct }) {
         ))}
       </div>
 
+      {/* ================= AUCUN RÉSULTAT ================= */}
       {filtered.length === 0 && (
-        <p style={{ marginTop: 20 }}>Aucun produit trouvé.</p>
+        <p style={{ marginTop: 20 }}>
+          Aucun produit trouvé.
+        </p>
       )}
     </div>
   );
