@@ -252,3 +252,89 @@ img {
   line-height: 1.4;
   color: var(--primary);
 }
+
+
+/* =========================
+   BOTTOM NAVIGATION
+========================= */
+
+/* Barre de navigation fixée en bas de l'écran */
+.bottom-nav {
+  position: fixed;          /* Toujours visible en bas */
+  bottom: 0;                /* Collée en bas */
+  left: 0;
+  right: 0;                 /* Prend toute la largeur */
+  display: flex;            /* Met les boutons en ligne */
+  justify-content: space-around; /* Espace égal entre les boutons */
+  padding: 10px;            /* Espace intérieur */
+  background: white;        /* Fond blanc */
+  border-top: 1px solid var(--border); /* Ligne en haut */
+}
+
+/* Style des boutons dans la bottom nav */
+.bottom-nav button {
+  background: none;         /* Pas de fond */
+  border: none;             /* Pas de bordure */
+  display: flex;            
+  flex-direction: column;   /* Icône au-dessus du texte */
+  align-items: center;      /* Centré horizontalement */
+  font-size: 11px;          /* Petite taille pour mobile */
+  color: var(--muted);      /* Couleur texte secondaire */
+  gap: 4px;                 /* Espace entre icône et texte */
+  position: relative;       /* Nécessaire pour le badge */
+}
+
+/* Couleur au survol */
+.bottom-nav button:hover {
+  color: var(--primary);    /* Devient couleur principale */
+}
+
+/* Bouton panier (position relative pour badge) */
+.cart-btn {
+  position: relative;       /* Permet de placer le badge dessus */
+}
+
+/* Petit rond compteur du panier */
+.cart-badge {
+  position: absolute;       /* Positionné par rapport au bouton */
+  top: -4px;                /* Décalé vers le haut */
+  right: -8px;              /* Décalé vers la droite */
+  background: var(--primary); /* Couleur principale */
+  color: white;             /* Texte blanc */
+  font-size: 10px;          /* Très petit texte */
+  padding: 2px 6px;         /* Taille du rond */
+  border-radius: 50px;      /* Rond */
+}
+
+.hero {
+  text-align: center;
+  margin: 30px 0;
+  padding: 0 10px;
+}
+
+.hero-title {
+  font-size: 28px;       /* un peu plus grand */
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.hero-title span {
+  display: block;
+  color: var(--primary);
+}
+
+.hero-subtitle {
+  margin-top: 12px;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+.hero::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: var(--primary);
+  margin: 18px auto 0;
+  border-radius: 10px;
+}
