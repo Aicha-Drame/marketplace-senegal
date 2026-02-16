@@ -1,31 +1,50 @@
-// Composant qui affiche un produit
 export default function ProductCard({ product, onAdd, onOpen }) {
   return (
     <div
-      style={{
-        border: "1px solid #ddd",
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 10,
-        cursor: "pointer",
-      }}
-      // Quand on clique sur la carte, on ouvre la page produit
+      className="card"
       onClick={() => onOpen(product)}
+      style={{ cursor: "pointer" }}
     >
-      <h4>{product.name}</h4>
-      <p>{product.price} CFA</p>
-      <small>Stock : {product.stock}</small>
-      <br />
+      {/* Image principale */}
+      {product.images?.[0] ? (
+        <img
+          src={product.images[0]}
+          alt={product.name}
+          style={{
+            width: "100%",
+            aspectRatio: "1 / 1", // 🔥 clé Leboncoin
+            objectFit: "cover",
+          }}
+        />
+      ) : (
+        <div
+          style={{
+            aspectRatio: "1 / 1",
+            background: "#f3f4f6",
+          }}
+        />
+      )}
 
-      {/* Bouton pour ajouter au panier */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation(); // empêche d’ouvrir la page produit
-          onAdd(product);
-        }}
-      >
-        Ajouter
-      </button>
+      <div style={{ padding: 10 }}>
+        <h4 style={{ fontSize: 14, marginBottom: 4 }}>
+          {product.name}
+        </h4>
+
+        <p style={{ fontWeight: "bold", fontSize: 14 }}>
+          {product.price} CFA
+        </p>
+
+        <button
+          className="primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAdd(product);
+          }}
+          style={{ width: "100%", marginTop: 8 }}
+        >
+          Ajouter
+        </button>
+      </div>
     </div>
   );
 }
