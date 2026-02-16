@@ -22,10 +22,16 @@ export default function Home({ products, addToCart, openProduct }) {
 
       {/* ================= HEADER ================= */}
       <h2>SenShop</h2>
+<div className="hero">
+  <h1 className="hero-title">
+    Achetez local.
+    <span>Soutenez les vendeurs sénégalais.</span>
+  </h1>
 
-     <p className="home-tagline">
-       Achetez local. Soutenez les vendeurs sénégalais.
-     </p>
+  <p className="hero-subtitle">
+    Découvrez les meilleurs produits alimentaires du Sénégal.
+  </p>
+</div>
 
       {/* ================= RECHERCHE ================= */}
       <input
