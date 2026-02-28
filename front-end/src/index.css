@@ -338,3 +338,37 @@ img {
   margin: 18px auto 0;
   border-radius: 10px;
 }
+
+/* ================= CHAT ================= */
+
+.chat-box {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.chat-message {
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #eee;
+  max-width: 70%;
+}
+
+.chat-message.me {
+  background: var(--primary);
+  color: white;
+  align-self: flex-end;
+}
+
+.chat-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.chat-input input {
+  flex: 1;
+}

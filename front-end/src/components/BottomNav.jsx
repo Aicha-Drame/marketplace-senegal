@@ -1,53 +1,74 @@
-import { FaHome, FaShoppingCart, FaUser } from "react-icons/fa";
+import { FiHome, FiShoppingCart, FiList, FiUser } from "react-icons/fi";
 
-export default function BottomNav({ setPage, user, setUser, cart = [] }) {
-  return (
-    <div className="bottom-nav">
-      
-      {/* MENU ACHETEUR */}
-      {user.role === "buyer" && (
-        <>
-          <button onClick={() => setPage("home")}>
-            <FaHome size={18} />
-            Accueil
-          </button>
+// ===============================
+// NAVIGATION BAS DE PAGE
+// ===============================
 
-          <button
-            className="cart-btn"
-            onClick={() => setPage("cart")}
-          >
-            <FaShoppingCart size={18} />
-            Panier
+export default function BottomNav({
+setPage,
+user,
+setUser,
+cart
+}) {
+return (
+<div className="bottom-nav">
 
-            {/* Badge compteur */}
-            {cart.length > 0 && (
-              <span className="cart-badge">
-                {cart.length}
-              </span>
-            )}
-          </button>
-        </>
-      )}
+{/* ================= BUYER ================= */}
+{user.role === "buyer" && (
+<>
+{/* Accueil */}
+<button onClick={() => setPage("home")}>
+<FiHome size={20} />
+<span>Accueil</span>
+</button>
 
-      {/* MENU VENDEUR */}
-      {user.role === "seller" && (
-        <button onClick={() => setPage("seller")}>
-          <FaUser size={18} />
-          Dashboard
-        </button>
-      )}
+{/* Panier avec badge */}
+<button
+onClick={() => setPage("cart")}
+className="cart-btn"
+>
+<FiShoppingCart size={20} />
+<span>Panier</span>
 
-      {/* Switch rôle (dev uniquement) */}
-      <button
-        onClick={() =>
-          setUser((u) => ({
-            ...u,
-            role: u.role === "buyer" ? "seller" : "buyer",
-          }))
-        }
-      >
-        Mode
-      </button>
-    </div>
-  );
+{/* Badge quantité */}
+{cart && cart.length > 0 && (
+<span className="cart-badge">
+{cart.length}
+</span>
+)}
+</button>
+
+{/* Commandes */}
+<button onClick={() => setPage("orders")}>
+<FiList size={20} />
+<span>Commandes</span>
+</button>
+</>
+)}
+
+{/* ================= SELLER ================= */}
+{user.role === "seller" && (
+<button onClick={() => setPage("seller")}>
+<FiHome size={20} />
+<span>Dashboard</span>
+</button>
+)}
+
+{/* ================= SWITCH ROLE ================= */}
+<button
+onClick={() =>
+setUser((u) => ({
+...u,
+role:
+u.role === "buyer"
+? "seller"
+: "buyer",
+}))
+}
+>
+<FiUser size={20} />
+<span>{user.role}</span>
+</button>
+</div>
+);
 }

@@ -7,7 +7,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import AddProduct from "./pages/AddProduct";
 import BottomNav from "./components/BottomNav";
 import Login from "./pages/Login";
-
+import Orders from "./pages/Orders";
 import { products as baseProducts } from "./data/products";
 
 function App() {
@@ -136,6 +136,19 @@ function App() {
       )
     );
   };
+    // =============================
+// CHAT (messages client ↔ vendeur)
+// =============================
+const [messages, setMessages] = useState(() => {
+  const saved = localStorage.getItem("messages");
+  return saved ? JSON.parse(saved) : [];
+});
+
+// sauvegarde automatique
+useEffect(() => {
+  localStorage.setItem("messages", JSON.stringify(messages));
+}, [messages]);
+
 
   // =============================
   // PRODUITS VENDEUR

@@ -33,7 +33,14 @@ export default function ProductCard({ product, onAdd, onOpen }) {
         <p style={{ fontWeight: "bold", fontSize: 14 }}>
           {product.price} CFA
         </p>
-
+         <button
+          className="secondary"
+          onClick={() => {
+          setPage("chat");
+         }}
+>
+         Contacter le vendeur
+        </button>
         <button
           className="primary"
           onClick={(e) => {
