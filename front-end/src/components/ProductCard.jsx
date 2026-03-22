@@ -30,17 +30,7 @@ export default function ProductCard({ product, onAdd, onOpen }) {
           {product.name}
         </h4>
 
-        <p style={{ fontWeight: "bold", fontSize: 14 }}>
-          {product.price} CFA
-        </p>
-         <button
-          className="secondary"
-          onClick={() => {
-          setPage("chat");
-         }}
->
-         Contacter le vendeur
-        </button>
+        
         <button
           className="primary"
           onClick={(e) => {

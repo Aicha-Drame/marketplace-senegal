@@ -8,6 +8,8 @@ import AddProduct from "./pages/AddProduct";
 import BottomNav from "./components/BottomNav";
 import Login from "./pages/Login";
 import Orders from "./pages/Orders";
+import Chat from "./pages/Chat"; // ✅ CHAT
+
 import { products as baseProducts } from "./data/products";
 
 function App() {
@@ -63,7 +65,33 @@ function App() {
   }, [orders]);
 
   // =============================
-  // FONCTIONS PANIER
+  // CHAT (messages)
+  // =============================
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem("messages");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem("messages", JSON.stringify(messages));
+  }, [messages]);
+
+  // Envoyer message
+  const sendMessage = (text) => {
+    if (!text) return;
+
+    const newMessage = {
+      id: Date.now(),
+      text,
+      sender: user.role,
+      date: new Date().toLocaleTimeString(),
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+  };
+
+  // =============================
+  // PANIER
   // =============================
 
   const addToCart = (product) => {
@@ -101,7 +129,7 @@ function App() {
   };
 
   // =============================
-  // PASSER COMMANDE
+  // COMMANDES
   // =============================
 
   const placeOrder = () => {
@@ -123,10 +151,6 @@ function App() {
     setPage("home");
   };
 
-  // =============================
-  // METTRE À JOUR STATUT COMMANDE
-  // =============================
-
   const updateOrderStatus = (orderId, newStatus) => {
     setOrders((prev) =>
       prev.map((order) =>
@@ -136,19 +160,6 @@ function App() {
       )
     );
   };
-    // =============================
-// CHAT (messages client ↔ vendeur)
-// =============================
-const [messages, setMessages] = useState(() => {
-  const saved = localStorage.getItem("messages");
-  return saved ? JSON.parse(saved) : [];
-});
-
-// sauvegarde automatique
-useEffect(() => {
-  localStorage.setItem("messages", JSON.stringify(messages));
-}, [messages]);
-
 
   // =============================
   // PRODUITS VENDEUR
@@ -175,7 +186,7 @@ useEffect(() => {
   };
 
   // =============================
-  // PRODUIT DETAIL
+  // PRODUIT
   // =============================
 
   const openProduct = (product) => {
@@ -188,7 +199,6 @@ useEffect(() => {
   // =============================
   // RENDER
   // =============================
-
   return (
     <>
       {/* LOGIN */}
@@ -209,6 +219,7 @@ useEffect(() => {
           product={currentProduct}
           addToCart={addToCart}
           goBack={() => setPage("home")}
+          openChat={() => setPage("chat")} // ✅ bouton chat
         />
       )}
 
@@ -218,6 +229,16 @@ useEffect(() => {
           increaseQty={increaseQty}
           decreaseQty={decreaseQty}
           placeOrder={placeOrder}
+        />
+      )}
+
+      {/* ================= CHAT ================= */}
+
+      {user && page === "chat" && (
+        <Chat
+          messages={messages}
+          sendMessage={sendMessage}
+          goBack={() => setPage("product")}
         />
       )}
 
@@ -252,7 +273,7 @@ useEffect(() => {
         />
       )}
 
-      {/* NAVIGATION */}
+      {/* ================= NAVIGATION ================= */}
       {user && (
         <BottomNav
           setPage={setPage}

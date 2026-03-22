@@ -1,60 +1,175 @@
-// Composant carte produit
-export default function ProductCard({ product, onAdd, onOpen }) {
+import { useState } from "react";
+
+// Page détail produit
+export default function Product({
+  product,
+  addToCart,
+  goBack,
+  openChat,
+}) {
+  // Sécurité si aucun produit
+  if (!product) {
+    return (
+      <div className="page">
+        <p>Aucun produit sélectionné.</p>
+        <button onClick={goBack}>Retour</button>
+      </div>
+    );
+  }
+
+  // Gestion image active (slider)
+  const [index, setIndex] = useState(0);
+
+  const images = product.images?.length
+    ? product.images
+    : ["https://via.placeholder.com/400x300?text=Produit"];
+
+  const nextImage = () => {
+    setIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = () => {
+    setIndex((prev) =>
+      prev === 0 ? images.length - 1 : prev - 1
+    );
+  };
+
   return (
-    <div
-      onClick={() => onOpen(product)}
-      style={{
-        border: "1px solid #ddd",
-        borderRadius: 12,
-        marginBottom: 12,
-        cursor: "pointer",
-        overflow: "hidden", // empêche l’image de dépasser
-        background: "#fff",
-      }}
-    >
-      {/* Image produit */}
-      {product.images?.[0] && (
+    <div className="page">
+
+      {/* 🔙 Retour */}
+      <button onClick={goBack}>← Retour</button>
+
+      {/* 🖼 IMAGE PRINCIPALE */}
+      <div style={{ position: "relative", marginTop: 16 }}>
         <img
-          src={product.images[0]}
+          src={images[index]}
           alt={product.name}
           style={{
             width: "100%",
-            height: 160,        // taille fixe
-            objectFit: "cover", // image pro (pas étirée)
-            display: "block",
+            height: 250,
+            objectFit: "cover",
+            borderRadius: 12,
           }}
         />
-      )}
 
-      {/* Informations produit */}
-      <div style={{ padding: 12 }}>
-        <h4 style={{ margin: "4px 0" }}>{product.name}</h4>
+        {/* Slider si plusieurs images */}
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              style={navBtnLeft}
+            >
+              ‹
+            </button>
 
-        <p style={{ margin: 0, fontWeight: "bold" }}>
-          {product.price} CFA
-        </p>
+            <button
+              onClick={nextImage}
+              style={navBtnRight}
+            >
+              ›
+            </button>
+          </>
+        )}
+      </div>
 
-        <small>Stock : {product.stock}</small>
-
-        {/* Bouton ajouter panier */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // empêche ouverture produit
-            onAdd(product);
-          }}
+      {/* 🟠 Miniatures */}
+      {images.length > 1 && (
+        <div
           style={{
-            marginTop: 8,
-            width: "100%",
-            padding: 8,
-            borderRadius: 8,
-            border: "none",
-            background: "#ff6a00",
-            color: "#fff",
+            display: "flex",
+            gap: 8,
+            marginTop: 10,
+            overflowX: "auto",
           }}
         >
-          Ajouter
-        </button>
-      </div>
+          {images.map((img, i) => (
+            <img
+              key={i}
+              src={img}
+              alt=""
+              onClick={() => setIndex(i)}
+              style={{
+                width: 60,
+                height: 60,
+                objectFit: "cover",
+                borderRadius: 8,
+                border:
+                  i === index
+                    ? "2px solid #ff6a00"
+                    : "1px solid #ddd",
+                cursor: "pointer",
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 📦 INFOS PRODUIT */}
+      <h2 style={{ marginTop: 16 }}>
+        {product.name}
+      </h2>
+
+      <p style={{ color: "#6b7280" }}>
+        Catégorie : {product.category}
+      </p>
+
+      <p
+        style={{
+          fontSize: 22,
+          fontWeight: "bold",
+          marginTop: 6,
+        }}
+      >
+        {product.price} CFA
+      </p>
+
+      <p style={{ marginTop: 4 }}>
+        Stock : {product.stock}
+      </p>
+
+      {/* 🛒 BOUTON AJOUTER */}
+      <button
+        className="primary"
+        onClick={() => addToCart(product)}
+        style={{
+          width: "100%",
+          marginTop: 16,
+        }}
+      >
+        Ajouter au panier
+      </button>
+
+      {/* 💬 BOUTON CHAT */}
+      <button
+        className="secondary"
+        onClick={openChat}
+        style={{
+          width: "100%",
+          marginTop: 10,
+        }}
+      >
+        Contacter le vendeur
+      </button>
     </div>
   );
 }
+
+/* =============================
+   STYLES NAVIGATION IMAGES
+============================= */
+
+const navBtnLeft = {
+  position: "absolute",
+  top: "50%",
+  left: 10,
+  transform: "translateY(-50%)",
+  background: "rgba(0,0,0,0.4)",
+  color: "white",
+  border: "none",
+  borderRadius: "50%",
+  width: 32,
+  height: 32,
+  cursor: "pointer",
+};
+
