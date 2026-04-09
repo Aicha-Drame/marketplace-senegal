@@ -141,6 +141,7 @@ export default function AddProduct({ onAdd, goBack, product, onUpdate }) {
     ))}
   </div>
 )}
+<button>Publier</button>
 
 
       {/* Bouton */}
