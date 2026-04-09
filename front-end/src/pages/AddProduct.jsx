@@ -22,13 +22,21 @@ export default function AddProduct({
   const [images, setImages] = useState(product?.images || []);
 
   // Gestion images (max 3)
-  const handleImages = (e) => {
-    const files = Array.from(e.target.files).slice(0, 3);
-    const previews = files.map((file) =>
-      URL.createObjectURL(file)
-    );
-    setImages(previews);
-  };
+ const handleImages = (e) => {
+  const files = Array.from(e.target.files).slice(0, 3);
+
+  const readers = files.map((file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result); // base64
+      reader.readAsDataURL(file);
+    });
+  });
+
+  Promise.all(readers).then((base64Images) => {
+    setImages(base64Images);
+  });
+};
 
   const submit = () => {
     if (!name || !price || !stock) return;
