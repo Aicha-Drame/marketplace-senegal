@@ -108,6 +108,40 @@ export default function AddProduct({ onAdd, goBack, product, onUpdate }) {
   <option value="Alimentation">Alimentation</option>
   <option value="Boissons">Boissons</option>
 </select>
+ {/* IMAGE */}
+<input
+  type="file"
+  accept="image/*"
+  multiple
+  onChange={handleImages}
+/>
+
+{/* PREVIEW */}
+{images.length > 0 && (
+  <div
+    style={{
+      display: "flex",
+      gap: 8,
+      overflowX: "auto",
+      margin: "12px 0",
+    }}
+  >
+    {images.map((img, i) => (
+      <img
+        key={i}
+        src={img}
+        alt="preview"
+        style={{
+          width: 120,
+          height: 120,
+          objectFit: "cover",
+          borderRadius: 8,
+        }}
+      />
+    ))}
+  </div>
+)}
+
 
       {/* Bouton */}
       <button
