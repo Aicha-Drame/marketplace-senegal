@@ -1,4 +1,4 @@
-mport { useState } from "react";
+import { useState } from "react";
 
 export default function AddProduct({ onAdd, goBack, product, onUpdate }) {
 
@@ -100,11 +100,16 @@ export default function AddProduct({ onAdd, goBack, product, onUpdate }) {
       />
 
       {/* Catégorie */}
-      <select
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        style={{ marginBottom: 10 }}
-      {/* Bouton */
+     <select
+  value={category}
+  onChange={(e) => setCategory(e.target.value)}
+  style={{ marginBottom: 10 }}
+>
+  <option value="Alimentation">Alimentation</option>
+  <option value="Boissons">Boissons</option>
+</select>
+
+      {/* Bouton */}
       <button
   onClick={submit}
   style={{
